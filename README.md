@@ -4,7 +4,10 @@ Query Google Search Console performance data via a service account — no
 third-party OAuth-consent MCP server, no browser login required once set up.
 Includes an optional systemd timer for a recurring weekly report.
 
-📖 Full write-up: [Google Visibility on Autopilot with Claude](https://www.agundur.de/projects/google-visibility-with-claude.html) (English) 
+📖 Full write-up:
+
+[Google Visibility on Autopilot with Claude](https://www.agundur.de/projects/google-visibility-with-claude.html) (English)
+
 [Google-Sichtbarkeit mit Claude automatisiert im Blick behalten](https://www.agundur.de/projects/google-sichtbarkeit-mit-claude.html) (Deutsch)
 
 ## Setup (from scratch, no Python experience needed)
