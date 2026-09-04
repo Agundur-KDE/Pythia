@@ -38,8 +38,19 @@ venv/bin/pip install -r requirements.txt
    the optional "grant access" steps).
 3. Open the service account -> **Keys** tab -> **Add Key** -> **Create new
    key** -> JSON. This downloads a `.json` file.
-4. Save that file as `service-account.json` in this same folder (it's
-   gitignored — see the note below on what that does and doesn't protect).
+4. Save that file somewhere **outside** this folder — e.g.
+   `~/.config/google-search-console/service-account.json` — and symlink it
+   in instead of copying it here:
+   ```bash
+   ln -s ~/.config/google-search-console/service-account.json service-account.json
+   ```
+   `.gitignore` matches by filename, so it treats a symlink the same as a
+   real file — but a symlink is strictly safer: even in a worst case like
+   `git add -f`, Git stores a symlink as just the target *path* it points
+   to, never the file's actual content. So an accidental force-add would at
+   most leak a local path, not your key. Placing the real key directly in
+   this folder works too and is still gitignored, just without that extra
+   safety margin.
 5. Copy the service account's email address (ends in
    `...iam.gserviceaccount.com`) and add it as a user in
    **Search Console -> Settings -> Users and permissions** for the site you
