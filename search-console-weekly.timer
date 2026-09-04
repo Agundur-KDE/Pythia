@@ -1,0 +1,9 @@
+[Unit]
+Description=Weekly Google Search Console report (Monday morning, catches up if missed)
+
+[Timer]
+OnCalendar=Mon *-*-* 08:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
