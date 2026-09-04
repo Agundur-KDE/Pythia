@@ -3,6 +3,10 @@ Description=Weekly Google Search Console report
 
 [Service]
 Type=oneshot
+# Adjust PATH if `claude` isn't on it under a non-interactive systemd session.
 Environment=PATH=%h/.local/bin:%h/bin:/usr/local/bin:/usr/bin:/bin
+# REQUIRED: the property to query — sc-domain:example.com or https://www.example.com/
 Environment=SITE_URL=https://www.example.com/
-ExecStart=%h/pfad/zu/weekly-report.sh
+# REQUIRED: replace with the absolute path to weekly-report.sh in your clone,
+# e.g. %h/Pythia/weekly-report.sh
+ExecStart=%h/Pythia/weekly-report.sh

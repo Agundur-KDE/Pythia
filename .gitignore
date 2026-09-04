@@ -1,4 +1,14 @@
 venv/
+.venv/
+env/
 service-account.json
+credentials.json
+client_secret*.json
+token.json
+*.pem
+.env
+.env.*
+secrets/
 *.pyc
 __pycache__/
+search-console-reports/

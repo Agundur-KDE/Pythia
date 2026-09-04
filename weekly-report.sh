@@ -1,23 +1,26 @@
 #!/usr/bin/env bash
 # Weekly Search Console check — runs headless via a systemd timer (or cron),
 # writes a markdown report and fires a desktop notification when done.
+#
+# Requires: the Claude Code CLI (`claude`), logged in, on PATH.
+# Desktop notification requires an active desktop session (gdbus/D-Bus).
 set -euo pipefail
 
+script_dir="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
 export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u)/bus"
 
 SITE_URL="${SITE_URL:?Set SITE_URL, e.g. https://www.example.com/ or sc-domain:example.com}"
-base_dir="$HOME/.config/google-search-console"
 report_dir="$HOME/search-console-reports"
 mkdir -p "$report_dir"
 report_file="$report_dir/$(date +%Y-%m-%d).md"
-prev_report="$(find "$report_dir" -name '*.md' -newer /dev/null -printf '%T@ %p\n' 2>/dev/null | sort -rn | awk 'NR==2{print $2}')"
+prev_report="$(ls -t "$report_dir"/*.md 2>/dev/null | head -n1 || true)"
 
 prompt=$(cat <<EOF
 Weekly Google Search Console check for ${SITE_URL}. You are running headless
 via a scheduled timer with no memory of earlier sessions — everything you
 need is in this prompt.
 
-Query script: $base_dir/venv/bin/python $base_dir/query.py
+Query script: $script_dir/venv/bin/python $script_dir/query.py
   Examples:
     <script> "${SITE_URL}" --days 7 --dimensions page --limit 25
     <script> "${SITE_URL}" --days 7 --dimensions query --limit 25
@@ -39,12 +42,18 @@ Task:
 EOF
 )
 
-summary="$(claude -p "$prompt" --allowedTools "Bash Write" --add-dir "$base_dir" --add-dir "$report_dir" 2>&1)"
+summary="$(claude -p "$prompt" --allowedTools "Bash Write" --add-dir "$script_dir" --add-dir "$report_dir" 2>&1)"
+
+if [ -f "$report_file" ]; then
+    title="Weekly report is ready"
+else
+    title="Weekly report FAILED — no report file written"
+fi
 
 gdbus call --session --dest org.freedesktop.Notifications \
     --object-path /org/freedesktop/Notifications \
     --method org.freedesktop.Notifications.Notify \
-    "Search Console" 0 "search-console" "Weekly report is ready" \
+    "Search Console" 0 "search-console" "$title" \
     "${summary:0:200}" "[]" "{}" 20000 >/dev/null 2>&1 || true
 
 echo "$summary"
