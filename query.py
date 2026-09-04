@@ -8,8 +8,9 @@ Examples:
     query.py sc-domain:example.com --days 28 --dimensions page
     query.py sc-domain:example.com --days 7 --dimensions query --limit 20
 
-Note: --days N covers N+1 calendar days (both start and end date are
-inclusive), and Search Console data usually lags 1-3 days behind today.
+Note: --days N covers exactly N calendar days ending today (both start and
+end date inclusive), and Search Console data usually lags 1-3 days behind
+today, so the most recent day or two may be missing or incomplete.
 """
 import argparse
 import datetime
@@ -44,7 +45,7 @@ def main():
         sys.exit("--days must be at least 1.")
     if not 1 <= args.limit <= 25000:
         sys.exit("--limit must be between 1 and 25000 (Search Console API limit).")
-    dims = args.dimensions.split(",")
+    dims = [d.strip() for d in args.dimensions.split(",")]
     unknown = [d for d in dims if d not in VALID_DIMENSIONS]
     if unknown:
         sys.exit(f"Unknown dimension(s): {', '.join(unknown)}. Valid: {', '.join(sorted(VALID_DIMENSIONS))}")
@@ -63,7 +64,7 @@ def main():
         sys.exit(f"Invalid service account key file ({KEY_FILE}): {e}")
 
     end = datetime.date.today()
-    start = end - datetime.timedelta(days=args.days)
+    start = end - datetime.timedelta(days=args.days - 1)
 
     body = {
         "startDate": start.isoformat(),
@@ -75,17 +76,19 @@ def main():
     try:
         resp = service.searchanalytics().query(siteUrl=args.site, body=body).execute()
     except HttpError as e:
+        if e.resp.status == 400:
+            sys.exit(
+                f"Invalid site URL syntax: '{args.site}'.\n"
+                "Fix: use sc-domain:example.com for a Domain property, or "
+                "https://www.example.com/ (with trailing slash) for a URL-prefix property."
+            )
         if e.resp.status == 403:
             sys.exit(
-                f"Permission denied for site '{args.site}'.\n"
-                "Fix: add this service account's email as a (Restricted/read-only) user "
-                "under Settings -> Users and permissions in Search Console for that exact property."
-            )
-        if e.resp.status == 404:
-            sys.exit(
-                f"Site not found: '{args.site}'.\n"
-                "Fix: check the exact property syntax — sc-domain:example.com for a Domain "
-                "property, or https://www.example.com/ (with trailing slash) for a URL-prefix property."
+                f"No access to site '{args.site}' (this also shows up for a property that "
+                "doesn't exist under this account, not just a real permission error).\n"
+                "Fix: add this service account's email as a (Restricted/read-only) user under "
+                "Settings -> Users and permissions in Search Console for that exact property, "
+                "and double-check the property name/syntax."
             )
         sys.exit(f"Search Console API request failed ({e.resp.status}): {e}")
 

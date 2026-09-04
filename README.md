@@ -71,8 +71,9 @@ venv/bin/python query.py "https://www.example.com/" --days 7 --dimensions page -
   (with the trailing slash) for a URL-prefix property — use whichever
   matches how your property is set up in Search Console.
 - `--dimensions` accepts a comma-separated list: `query,page,country,device,date,searchAppearance`
-- `--days N` covers N+1 calendar days (both start and end date inclusive),
-  and Search Console data usually lags 1-3 days behind today.
+- `--days N` covers exactly N calendar days ending today (both start and end
+  date inclusive), and Search Console data usually lags 1-3 days behind
+  today, so the most recent day or two may be missing or incomplete.
 
 If something's missing (dependencies, the key file, permissions, an unknown
 dimension), the script tells you in plain English what to fix instead of a
